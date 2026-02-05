@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,28 @@ import { useResumeStore } from "@/lib/store";
 import { Plus, X, Lightbulb } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import { AiSuggestionPanel } from "../ai-suggestion-panel";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { SortableItem } from "../sortable-item";
+import { useDndList } from "@/hooks/use-dnd-list";
 
 export function SkillsFormContent() {
   const skills = useResumeStore((s) => s.resume.skills);
   const addSkill = useResumeStore((s) => s.addSkill);
   const removeSkill = useResumeStore((s) => s.removeSkill);
+  const reorderSkillGroups = useResumeStore((s) => s.reorderSkillGroups);
   const [inputs, setInputs] = useState<Record<number, string>>({});
+  const { sensors, itemIds, handleDragEnd } = useDndList(skills.length, reorderSkillGroups);
+
+  const handleAcceptAiSkills = useCallback((groupIndex: number, text: string) => {
+    const newSkills = text.split(",").map((s) => s.trim()).filter(Boolean);
+    for (const skill of newSkills) {
+      if (!skills[groupIndex].items.includes(skill)) {
+        addSkill(groupIndex, skill);
+      }
+    }
+  }, [skills, addSkill]);
 
   const handleAdd = (groupIndex: number) => {
     const value = (inputs[groupIndex] || "").trim();
@@ -31,73 +47,82 @@ export function SkillsFormContent() {
 
   return (
     <div className="space-y-6">
-      {skills.map((group, i) => (
-        <fieldset key={i} className="rounded-xl border border-zinc-200 p-4 dark:border-zinc-800">
-          <Label className="mb-3 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-            {group.category}
-          </Label>
-          <div className="flex flex-wrap gap-2 min-h-[40px]">
-            <AnimatePresence initial={false}>
-              {group.items.length === 0 && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="text-sm text-zinc-400 dark:text-zinc-500"
-                >
-                  Добавьте навыки для лучшей видимости в ATS
-                </motion.p>
-              )}
-              {group.items.map((item) => (
-                <motion.div
-                  key={item}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  <Badge
-                    variant="secondary"
-                    className="gap-1.5 px-3 py-1.5 text-sm bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950 dark:text-indigo-300"
-                  >
-                    {item}
-                    <button
-                      onClick={() => handleRemove(i, item)}
-                      className="rounded-full p-0.5 hover:bg-indigo-300 dark:hover:bg-indigo-800"
-                      aria-label={`Удалить ${item}`}
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
+          {skills.map((group, i) => (
+            <SortableItem key={i} id={String(i)} className="rounded-xl border border-zinc-200 p-4 pl-10 dark:border-zinc-800">
+              <Label className="mb-3 block text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+                {group.category}
+              </Label>
+              <div className="flex flex-wrap gap-2 min-h-[40px]">
+                <AnimatePresence initial={false}>
+                  {group.items.length === 0 && (
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-sm text-zinc-400 dark:text-zinc-500"
                     >
-                      <X className="size-3" />
-                    </button>
-                  </Badge>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <Input
-              placeholder="Введите навык и нажмите Enter..."
-              className="h-11"
-              value={inputs[i] || ""}
-              onChange={(e) => setInputs((prev) => ({ ...prev, [i]: e.target.value }))}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAdd(i);
-                }
-              }}
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-11 w-11 shrink-0"
-              onClick={() => handleAdd(i)}
-              aria-label="Добавить навык"
-            >
-              <Plus className="size-5" />
-            </Button>
-          </div>
-        </fieldset>
-      ))}
+                      Добавьте навыки для лучшей видимости в ATS
+                    </motion.p>
+                  )}
+                  {group.items.map((item) => (
+                    <motion.div
+                      key={item}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.8 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      <Badge
+                        variant="secondary"
+                        className="gap-1.5 px-3 py-1.5 text-sm bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-950 dark:text-indigo-300"
+                      >
+                        {item}
+                        <button
+                          onClick={() => handleRemove(i, item)}
+                          className="rounded-full p-0.5 hover:bg-indigo-300 dark:hover:bg-indigo-800"
+                          aria-label={`Удалить ${item}`}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <Input
+                  placeholder="Введите навык и нажмите Enter..."
+                  className="h-11"
+                  value={inputs[i] || ""}
+                  onChange={(e) => setInputs((prev) => ({ ...prev, [i]: e.target.value }))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAdd(i);
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11 shrink-0"
+                  onClick={() => handleAdd(i)}
+                  aria-label="Добавить навык"
+                >
+                  <Plus className="size-5" />
+                </Button>
+              </div>
+              <AiSuggestionPanel
+                section="skills"
+                context={{ currentSkills: group.items.join(", "), category: group.category }}
+                onAccept={(text) => handleAcceptAiSkills(i, text)}
+              />
+            </SortableItem>
+          ))}
+        </SortableContext>
+      </DndContext>
 
       <div className="rounded-xl bg-amber-50 p-4 dark:bg-amber-950/30">
         <div className="flex items-start gap-3">

@@ -5,15 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Download, FileJson, FileText, File, Info, Loader2 } from "lucide-react";
+import { Download, FileJson, FileText, File, FileType, Loader2 } from "lucide-react";
 import { useResumeStore } from "@/lib/store";
 import { templateMeta } from "@/lib/template-registry";
 import { toast } from "sonner";
+import { generatePdf } from "@/lib/export-pdf";
+import { downloadJson } from "@/lib/export-json";
 import type { ExportFormat } from "@/lib/types";
 
 export function ExportOptions() {
   const resume = useResumeStore((s) => s.resume);
   const selectedTemplate = useResumeStore((s) => s.selectedTemplate);
+  const sectionVisibility = useResumeStore((s) => s.sectionVisibility);
+  const sectionOrder = useResumeStore((s) => s.sectionOrder);
+  const designSettings = useResumeStore((s) => s.designSettings);
   const [format, setFormat] = useState<ExportFormat>("pdf");
   const [fileName, setFileName] = useState(
     () => `${resume.basics.name.replace(/\s+/g, "_")}_Resume`
@@ -23,30 +28,67 @@ export function ExportOptions() {
   const handleDownloadJSON = () => {
     setIsDownloading(true);
     try {
-      const blob = new Blob([JSON.stringify(resume, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${fileName}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
+      downloadJson(resume, fileName);
       toast.success("JSON файл скачан");
     } finally {
       setIsDownloading(false);
     }
   };
 
-  const handleDownloadPDF = () => {
-    window.print();
-    toast.info("Диалог печати открыт");
+  const handleDownloadPDF = async () => {
+    setIsDownloading(true);
+    try {
+      await generatePdf("resume-print-area", fileName);
+      toast.success("PDF файл скачан");
+    } catch {
+      toast.error("Ошибка генерации PDF");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
-  const handleDownload = () => {
+  const handleDownloadDOCX = async () => {
+    setIsDownloading(true);
+    try {
+      const { generateDocx } = await import("@/lib/generate-docx");
+      const blob = await generateDocx(resume, sectionVisibility, sectionOrder, designSettings);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${fileName}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("DOCX файл скачан");
+    } catch {
+      toast.error("Ошибка генерации DOCX");
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownload = async () => {
     if (isDownloading) return;
-    if (format === "json") {
-      handleDownloadJSON();
+    switch (format) {
+      case "json":
+        handleDownloadJSON();
+        break;
+      case "docx":
+        await handleDownloadDOCX();
+        break;
+      default:
+        await handleDownloadPDF();
+    }
+  };
+
+  const secondaryFormat: ExportFormat = format === "pdf" ? "docx" : "pdf";
+  const secondaryLabel = secondaryFormat.toUpperCase();
+
+  const handleSecondaryDownload = async () => {
+    if (isDownloading) return;
+    if (secondaryFormat === "docx") {
+      await handleDownloadDOCX();
     } else {
-      handleDownloadPDF();
+      await handleDownloadPDF();
     }
   };
 
@@ -56,7 +98,7 @@ export function ExportOptions() {
 
       <div className="mb-6">
         <Label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Формат</Label>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <button
             className={`flex items-center gap-2 rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
               format === "pdf"
@@ -69,6 +111,19 @@ export function ExportOptions() {
           >
             <FileText className="size-4" />
             PDF
+          </button>
+          <button
+            className={`flex items-center gap-2 rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
+              format === "docx"
+                ? "border-blue-600 bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                : "border-zinc-200 text-zinc-600 hover:border-zinc-300 dark:border-zinc-700 dark:text-zinc-400"
+            }`}
+            onClick={() => setFormat("docx")}
+            aria-pressed={format === "docx"}
+            aria-label="Формат DOCX"
+          >
+            <FileType className="size-4" />
+            DOCX
           </button>
           <button
             className={`flex items-center gap-2 rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
@@ -85,15 +140,6 @@ export function ExportOptions() {
           </button>
         </div>
       </div>
-
-      {format === "pdf" && (
-        <div className="mb-6 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950">
-          <Info className="mt-0.5 size-4 shrink-0 text-blue-600" />
-          <p className="text-xs text-blue-700 dark:text-blue-300">
-            В диалоге печати выберите &laquo;Сохранить как PDF&raquo;, чтобы скачать файл. Убедитесь, что поля (margins) установлены на &laquo;Нет&raquo;.
-          </p>
-        </div>
-      )}
 
       <div className="mb-6">
         <Label htmlFor="filename" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -146,11 +192,11 @@ export function ExportOptions() {
           variant="outline"
           className="w-full"
           size="lg"
-          onClick={format === "pdf" ? handleDownloadJSON : handleDownloadPDF}
+          onClick={handleSecondaryDownload}
           disabled={isDownloading}
         >
           <File className="size-4" />
-          Скачать {format === "pdf" ? "JSON" : "PDF"}
+          Скачать {secondaryLabel}
         </Button>
       </div>
     </div>

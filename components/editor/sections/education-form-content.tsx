@@ -8,32 +8,14 @@ import { Label } from "@/components/ui/label";
 import { useResumeStore } from "@/lib/store";
 import { GraduationCap, Plus, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableItem } from "../sortable-item";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { AiSuggestionPanel } from "../ai-suggestion-panel";
+import { useDndList } from "@/hooks/use-dnd-list";
+import { DeleteConfirmDialog } from "../delete-confirm-dialog";
+import { EmptySectionState } from "../empty-section-state";
 
 export function EducationFormContent() {
   const education = useResumeStore((s) => s.resume.education);
@@ -42,11 +24,7 @@ export function EducationFormContent() {
   const removeEducation = useResumeStore((s) => s.removeEducation);
   const reorderEducation = useResumeStore((s) => s.reorderEducation);
   const newItemRef = useRef<HTMLInputElement>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
-  );
+  const { sensors, itemIds, handleDragEnd } = useDndList(education.length, reorderEducation);
 
   const handleAdd = () => {
     addEducation();
@@ -63,35 +41,17 @@ export function EducationFormContent() {
     toast.success("Образование удалено");
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = Number(active.id);
-      const newIndex = Number(over.id);
-      reorderEducation(oldIndex, newIndex);
-    }
-  };
-
-  const itemIds = education.map((_, i) => String(i));
-
   return (
     <div className="space-y-4">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
           <AnimatePresence initial={false}>
             {education.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="rounded-xl border-2 border-dashed border-zinc-200 p-8 text-center dark:border-zinc-700"
-              >
-                <GraduationCap className="mx-auto mb-3 size-12 text-zinc-300 dark:text-zinc-600" />
-                <p className="text-base font-medium text-zinc-500 dark:text-zinc-400">Добавьте ваше образование</p>
-                <p className="mt-1 text-sm text-zinc-400 dark:text-zinc-500">
-                  Укажите учебные заведения, степени и специальности
-                </p>
-              </motion.div>
+              <EmptySectionState
+                icon={GraduationCap}
+                title="Добавьте ваше образование"
+                subtitle="Укажите учебные заведения, степени и специальности"
+              />
             )}
             {education.map((edu, i) => (
               <SortableItem key={i} id={String(i)} className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 pl-10 dark:bg-zinc-900/50 dark:border-zinc-800">
@@ -104,25 +64,7 @@ export function EducationFormContent() {
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Образование {i + 1}</span>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-red-500">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Удалить образование?</AlertDialogTitle>
-                          <AlertDialogDescription>Это действие можно отменить через Ctrl+Z.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Отмена</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleRemove(i)} className="bg-red-600 hover:bg-red-700">
-                            Удалить
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <DeleteConfirmDialog title="Удалить образование?" onConfirm={() => handleRemove(i)} />
                   </div>
                   <fieldset>
                     <legend className="sr-only">Образование {i + 1}</legend>
@@ -188,6 +130,11 @@ export function EducationFormContent() {
                         rows={2}
                         className="resize-none"
                         placeholder="Красный диплом, участие в олимпиадах..."
+                      />
+                      <AiSuggestionPanel
+                        section="education"
+                        context={{ institution: edu.institution, degree: edu.degree, currentDescription: edu.description }}
+                        onAccept={(text) => updateEducation(i, "description", text)}
                       />
                     </div>
                   </fieldset>

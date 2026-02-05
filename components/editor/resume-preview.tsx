@@ -7,26 +7,16 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { Minus, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useResumeStore } from "@/lib/store";
-import { ModernTemplate } from "@/components/resume-templates/modern";
-import { ProfessionalTemplate } from "@/components/resume-templates/professional";
-import { CreativeTemplate } from "@/components/resume-templates/creative";
-import { ClassicTemplate } from "@/components/resume-templates/classic";
-import type { TemplateId } from "@/lib/types";
+import { templateComponents } from "@/lib/template-registry";
 
 const A4_WIDTH = 595;
-
-const templates: Record<TemplateId, typeof ModernTemplate> = {
-  modern: ModernTemplate,
-  professional: ProfessionalTemplate,
-  creative: CreativeTemplate,
-  classic: ClassicTemplate,
-};
 
 export function ResumePreviewPanel() {
   const resume = useResumeStore((s) => s.resume);
   const selectedTemplate = useResumeStore((s) => s.selectedTemplate);
   const designSettings = useResumeStore((s) => s.designSettings);
   const sectionVisibility = useResumeStore((s) => s.sectionVisibility);
+  const sectionOrder = useResumeStore((s) => s.sectionOrder);
   const zoomLevel = useResumeStore((s) => s.zoomLevel);
   const zoomIn = useResumeStore((s) => s.zoomIn);
   const zoomOut = useResumeStore((s) => s.zoomOut);
@@ -71,7 +61,7 @@ export function ResumePreviewPanel() {
     setManualOverride(false);
   }, []);
 
-  const Template = templates[selectedTemplate];
+  const Template = templateComponents[selectedTemplate];
 
   return (
     <div className="flex h-full flex-col bg-zinc-100 dark:bg-zinc-900">
@@ -95,7 +85,7 @@ export function ResumePreviewPanel() {
                   transformOrigin: "top left",
                 }}
               >
-                <Template data={resume} designSettings={designSettings} sectionVisibility={sectionVisibility} />
+                <Template data={resume} designSettings={designSettings} sectionVisibility={sectionVisibility} sectionOrder={sectionOrder} />
               </div>
             </motion.div>
           </AnimatePresence>

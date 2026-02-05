@@ -1,14 +1,7 @@
-"use client";
-
+import Link from "next/link";
 import { FileText } from "lucide-react";
-import { toast } from "sonner";
 
 export function Footer() {
-  const handleDeadLink = (e: React.MouseEvent) => {
-    e.preventDefault();
-    toast.info("Раздел в разработке");
-  };
-
   return (
     <footer className="border-t bg-zinc-50">
       <div className="container mx-auto px-4 py-12">
@@ -18,16 +11,21 @@ export function Footer() {
             <span className="font-semibold">ResumeBuilder</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            &copy; 2025 ResumeBuilder. Создано для демонстрации.
+            &copy; 2026 ResumeBuilder. Создано для демонстрации.
           </p>
           <div className="flex gap-6 text-sm text-muted-foreground">
-            <a href="#" onClick={handleDeadLink} className="hover:text-foreground transition-colors">
+            <Link href="/about" className="hover:text-foreground transition-colors">
               О проекте
-            </a>
-            <a href="#" onClick={handleDeadLink} className="hover:text-foreground transition-colors">
+            </Link>
+            <Link href="/about#contacts" className="hover:text-foreground transition-colors">
               Контакты
-            </a>
-            <a href="#" onClick={handleDeadLink} className="hover:text-foreground transition-colors">
+            </Link>
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
               GitHub
             </a>
           </div>

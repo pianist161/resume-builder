@@ -5,7 +5,7 @@ import { useResumeStore } from "@/lib/store";
 
 export function useAutosave() {
   const isDirty = useResumeStore((s) => s.isDirty);
-  const markSaved = useResumeStore((s) => s.markSaved);
+  const saveCurrentResume = useResumeStore((s) => s.saveCurrentResume);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -14,13 +14,13 @@ export function useAutosave() {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     timerRef.current = setTimeout(() => {
-      markSaved();
+      saveCurrentResume();
     }, 1500);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [isDirty, markSaved]);
+  }, [isDirty, saveCurrentResume]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

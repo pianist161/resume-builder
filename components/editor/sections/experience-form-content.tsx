@@ -7,34 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useResumeStore } from "@/lib/store";
-import { Briefcase, Plus, Trash2, GripVertical } from "lucide-react";
+import { Briefcase, Plus, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableItem } from "../sortable-item";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { AiSuggestionPanel } from "../ai-suggestion-panel";
+import { useDndList } from "@/hooks/use-dnd-list";
+import { DeleteConfirmDialog } from "../delete-confirm-dialog";
+import { EmptySectionState } from "../empty-section-state";
 
 export function ExperienceFormContent() {
   const experience = useResumeStore((s) => s.resume.experience);
@@ -43,11 +25,7 @@ export function ExperienceFormContent() {
   const removeExperience = useResumeStore((s) => s.removeExperience);
   const reorderExperience = useResumeStore((s) => s.reorderExperience);
   const newItemRef = useRef<HTMLInputElement>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
-  );
+  const { sensors, itemIds, handleDragEnd } = useDndList(experience.length, reorderExperience);
 
   const handleAdd = () => {
     addExperience();
@@ -64,35 +42,17 @@ export function ExperienceFormContent() {
     toast.success("Опыт работы удалён");
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = Number(active.id);
-      const newIndex = Number(over.id);
-      reorderExperience(oldIndex, newIndex);
-    }
-  };
-
-  const itemIds = experience.map((_, i) => String(i));
-
   return (
     <div className="space-y-4">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
           <AnimatePresence initial={false}>
             {experience.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="rounded-xl border-2 border-dashed border-zinc-200 p-8 text-center dark:border-zinc-700"
-              >
-                <Briefcase className="mx-auto mb-3 size-12 text-zinc-300 dark:text-zinc-600" />
-                <p className="text-base font-medium text-zinc-500 dark:text-zinc-400">Добавьте ваш опыт работы</p>
-                <p className="mt-1 text-sm text-zinc-400 dark:text-zinc-500">
-                  Укажите достижения с конкретными цифрами для лучшей видимости в ATS
-                </p>
-              </motion.div>
+              <EmptySectionState
+                icon={Briefcase}
+                title="Добавьте ваш опыт работы"
+                subtitle="Укажите достижения с конкретными цифрами для лучшей видимости в ATS"
+              />
             )}
             {experience.map((exp, i) => (
               <SortableItem key={i} id={String(i)} className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 pl-10 dark:bg-zinc-900/50 dark:border-zinc-800">
@@ -119,25 +79,7 @@ export function ExperienceFormContent() {
                           Текущее место
                         </Label>
                       </div>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-red-500">
-                            <Trash2 className="size-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Удалить опыт работы?</AlertDialogTitle>
-                            <AlertDialogDescription>Это действие можно отменить через Ctrl+Z.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Отмена</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleRemove(i)} className="bg-red-600 hover:bg-red-700">
-                              Удалить
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <DeleteConfirmDialog title="Удалить опыт работы?" onConfirm={() => handleRemove(i)} />
                     </div>
                   </div>
                   <fieldset>
@@ -205,6 +147,11 @@ export function ExperienceFormContent() {
                         rows={3}
                         className="resize-none"
                         placeholder="• Увеличил конверсию на 25% за счёт оптимизации UI&#10;• Руководил командой из 3 разработчиков"
+                      />
+                      <AiSuggestionPanel
+                        section="experience"
+                        context={{ company: exp.company, position: exp.position, currentDescription: exp.description }}
+                        onAccept={(text) => updateExperience(i, "description", text)}
                       />
                     </div>
                   </fieldset>

@@ -12,36 +12,10 @@ import {
 } from "@/components/ui/dialog";
 import { useResumeStore } from "@/lib/store";
 import { mockResume } from "@/data/mock-resume";
-import type { TemplateId, DesignSettings, SectionVisibility } from "@/lib/types";
+import type { TemplateId } from "@/lib/types";
 import { Eye } from "lucide-react";
-import { ModernTemplate } from "@/components/resume-templates/modern";
-import { ProfessionalTemplate } from "@/components/resume-templates/professional";
-import { CreativeTemplate } from "@/components/resume-templates/creative";
-import { ClassicTemplate } from "@/components/resume-templates/classic";
-
-const templates: Record<TemplateId, typeof ModernTemplate> = {
-  modern: ModernTemplate,
-  professional: ProfessionalTemplate,
-  creative: CreativeTemplate,
-  classic: ClassicTemplate,
-};
-
-const defaultDesign: DesignSettings = {
-  accentColor: "#2563eb",
-  fontFamily: "inter",
-  fontSize: "medium",
-};
-
-const allVisible: SectionVisibility = {
-  basics: true,
-  summary: true,
-  experience: true,
-  education: true,
-  skills: true,
-  projects: true,
-  languages: true,
-  certifications: true,
-};
+import { templateComponents } from "@/lib/template-registry";
+import { defaultDesignSettings, defaultSectionVisibility } from "@/lib/defaults";
 
 interface TemplateCardProps {
   name: string;
@@ -61,7 +35,7 @@ export function TemplateCard({ name, description, preview, templateId, isSelecte
     router.push("/editor");
   };
 
-  const Template = templates[templateId];
+  const Template = templateComponents[templateId];
 
   return (
     <>
@@ -106,7 +80,7 @@ export function TemplateCard({ name, description, preview, templateId, isSelecte
               className="bg-white shadow-lg border"
               style={{ width: "595px", minHeight: "842px" }}
             >
-              <Template data={mockResume} designSettings={defaultDesign} sectionVisibility={allVisible} />
+              <Template data={mockResume} designSettings={defaultDesignSettings} sectionVisibility={defaultSectionVisibility} />
             </div>
           </div>
           <div className="flex justify-end gap-2 pt-2">

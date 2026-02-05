@@ -3,23 +3,7 @@
 import { motion } from "framer-motion";
 import { mockResume } from "@/data/mock-resume";
 import { ModernTemplate } from "@/components/resume-templates/modern";
-
-const defaultDesign = {
-  accentColor: "#2563eb",
-  fontFamily: "inter" as const,
-  fontSize: "medium" as const,
-};
-
-const allVisible = {
-  basics: true,
-  summary: true,
-  experience: true,
-  education: true,
-  skills: true,
-  projects: true,
-  languages: true,
-  certifications: true,
-};
+import { defaultDesignSettings, defaultSectionVisibility } from "@/lib/defaults";
 
 export function ResumePreview() {
   return (
@@ -58,8 +42,8 @@ export function ResumePreview() {
             >
               <ModernTemplate
                 data={mockResume}
-                designSettings={defaultDesign}
-                sectionVisibility={allVisible}
+                designSettings={defaultDesignSettings}
+                sectionVisibility={defaultSectionVisibility}
               />
             </div>
           </div>

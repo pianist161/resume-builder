@@ -8,6 +8,10 @@ export const mockResume: ResumeData = {
     phone: "+7 (999) 123-45-67",
     location: "Москва, Россия",
     website: "https://alexpetrov.dev",
+    linkedin: "https://linkedin.com/in/alexpetrov",
+    github: "https://github.com/alexpetrov",
+    telegram: "https://t.me/alexpetrov",
+    photo: "",
   },
   summary:
     "Опытный Frontend-разработчик с 7+ годами коммерческого опыта. Специализируюсь на React, TypeScript и построении масштабируемых веб-приложений. Руководил командой из 5 разработчиков, внедрял best practices и CI/CD процессы.",

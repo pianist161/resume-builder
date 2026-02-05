@@ -7,16 +7,14 @@ import { Label } from "@/components/ui/label";
 import { useResumeStore } from "@/lib/store";
 import { Award, Plus, Trash2, CheckCircle2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-  DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, type DragEndEvent,
-} from "@dnd-kit/core";
+import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { SortableItem } from "../sortable-item";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { AiSuggestionPanel } from "../ai-suggestion-panel";
+import { useDndList } from "@/hooks/use-dnd-list";
+import { DeleteConfirmDialog } from "../delete-confirm-dialog";
+import { EmptySectionState } from "../empty-section-state";
 
 export function CertificationsFormContent() {
   const certifications = useResumeStore((s) => s.resume.certifications);
@@ -25,11 +23,7 @@ export function CertificationsFormContent() {
   const removeCertification = useResumeStore((s) => s.removeCertification);
   const reorderCertifications = useResumeStore((s) => s.reorderCertifications);
   const newItemRef = useRef<HTMLInputElement>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor)
-  );
+  const { sensors, itemIds, handleDragEnd } = useDndList(certifications.length, reorderCertifications);
 
   const handleAdd = () => {
     addCertification();
@@ -46,33 +40,17 @@ export function CertificationsFormContent() {
     toast.success("Сертификат удалён");
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      reorderCertifications(Number(active.id), Number(over.id));
-    }
-  };
-
-  const itemIds = certifications.map((_, i) => String(i));
-
   return (
     <div className="space-y-4">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
           <AnimatePresence initial={false}>
             {certifications.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="rounded-xl border-2 border-dashed border-zinc-200 p-8 text-center dark:border-zinc-700"
-              >
-                <Award className="mx-auto mb-3 size-12 text-zinc-300 dark:text-zinc-600" />
-                <p className="text-base font-medium text-zinc-500 dark:text-zinc-400">Добавьте сертификаты</p>
-                <p className="mt-1 text-sm text-zinc-400 dark:text-zinc-500">
-                  Подтвердите вашу квалификацию и достижения
-                </p>
-              </motion.div>
+              <EmptySectionState
+                icon={Award}
+                title="Добавьте сертификаты"
+                subtitle="Подтвердите вашу квалификацию и достижения"
+              />
             )}
             {certifications.map((cert, i) => (
               <SortableItem key={i} id={String(i)} className="rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 pl-10 dark:bg-zinc-900/50 dark:border-zinc-800">
@@ -85,25 +63,7 @@ export function CertificationsFormContent() {
                 >
                   <div className="mb-4 flex items-center justify-between">
                     <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Сертификат {i + 1}</span>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-red-500">
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Удалить сертификат?</AlertDialogTitle>
-                          <AlertDialogDescription>Это действие можно отменить через Ctrl+Z.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Отмена</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleRemove(i)} className="bg-red-600 hover:bg-red-700">
-                            Удалить
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <DeleteConfirmDialog title="Удалить сертификат?" onConfirm={() => handleRemove(i)} />
                   </div>
                   <fieldset>
                     <legend className="sr-only">Сертификат {i + 1}</legend>
@@ -162,6 +122,12 @@ export function CertificationsFormContent() {
         <Plus className="size-5" />
         Добавить сертификат
       </Button>
+
+      <AiSuggestionPanel
+        section="certifications"
+        context={{ currentCerts: certifications.map((c) => `${c.name} (${c.organization})`).filter((s) => s !== " ()").join(", ") }}
+        onAccept={() => { toast.info("Используйте рекомендации для добавления сертификатов вручную"); }}
+      />
 
       <div className="rounded-xl bg-green-50 p-4 dark:bg-green-950/30">
         <div className="flex items-start gap-3">

@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
+  { href: "/resumes", label: "Мои резюме" },
   { href: "/templates", label: "Шаблоны" },
   { href: "/editor", label: "Редактор" },
 ];
@@ -40,7 +41,7 @@ export function Header() {
             </Link>
           ))}
           <Button asChild size="sm">
-            <Link href="/templates">Создать резюме</Link>
+            <Link href="/resumes">Создать резюме</Link>
           </Button>
         </nav>
 
@@ -68,7 +69,7 @@ export function Header() {
                 </Link>
               ))}
               <Button asChild className="mt-4">
-                <Link href="/templates">Создать резюме</Link>
+                <Link href="/resumes">Создать резюме</Link>
               </Button>
             </nav>
           </SheetContent>

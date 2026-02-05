@@ -1,52 +1,53 @@
-import type { ResumeData, DesignSettings, SectionVisibility } from "@/lib/types";
-import { Mail, Phone, MapPin, Globe } from "lucide-react";
+import { Fragment } from "react";
+import { DEFAULT_SECTION_ORDER } from "@/lib/types";
+import type { SectionKey } from "@/lib/types";
+import { Mail, Phone, MapPin, Globe, Linkedin, Github, Send } from "lucide-react";
+import {
+  fontFamilyMap, fontSizeMap, lineSpacingMap, sectionSpacingMap, marginsMap,
+  type TemplateProps,
+} from "@/lib/template-constants";
 
-const fontFamilyMap = {
-  inter: "'Inter', sans-serif",
-  georgia: "'Georgia', serif",
-  roboto: "'Roboto', sans-serif",
-};
-const fontSizeMap = { small: "12px", medium: "14px", large: "16px" };
-
-interface Props {
-  data: ResumeData;
-  designSettings: DesignSettings;
-  sectionVisibility: SectionVisibility;
-}
-
-export function ModernTemplate({ data, designSettings, sectionVisibility }: Props) {
+export function ModernTemplate({ data, designSettings, sectionVisibility, sectionOrder }: TemplateProps) {
   const { basics, summary, experience, education, skills, projects, languages, certifications } = data;
   const accent = designSettings.accentColor;
 
-  return (
-    <div
-      className="space-y-6 p-8"
-      style={{
-        fontFamily: fontFamilyMap[designSettings.fontFamily],
-        fontSize: fontSizeMap[designSettings.fontSize],
-      }}
-    >
-      {sectionVisibility.basics && (
+  const sSpacing = sectionSpacingMap[designSettings.sectionSpacing];
+
+  const order = sectionOrder ?? DEFAULT_SECTION_ORDER;
+
+  const sectionRenderers: Record<SectionKey, () => React.ReactNode> = {
+    basics: () => {
+      const showPhoto = designSettings.showPhoto && basics.photo;
+      return sectionVisibility.basics ? (
         <div className="text-center overflow-hidden">
+          {showPhoto && (
+            <img src={basics.photo} alt="" className="mx-auto mb-2 size-12 rounded-full object-cover" />
+          )}
           <h1 className="text-2xl font-bold text-zinc-900 break-words">{basics.name}</h1>
           <p className="mt-1 text-base truncate" style={{ color: accent }}>{basics.title}</p>
           <div className="mt-3 flex flex-wrap items-center justify-center gap-4 text-xs text-zinc-500">
             <span className="flex items-center gap-1 break-all"><Mail className="size-3 shrink-0" />{basics.email}</span>
             <span className="flex items-center gap-1"><Phone className="size-3 shrink-0" />{basics.phone}</span>
             <span className="flex items-center gap-1"><MapPin className="size-3 shrink-0" />{basics.location}</span>
-            <span className="flex items-center gap-1 break-all"><Globe className="size-3 shrink-0" />{basics.website}</span>
+            {basics.website && <span className="flex items-center gap-1 break-all"><Globe className="size-3 shrink-0" />{basics.website}</span>}
+            {basics.linkedin && <span className="flex items-center gap-1 break-all"><Linkedin className="size-3 shrink-0" />{basics.linkedin}</span>}
+            {basics.github && <span className="flex items-center gap-1 break-all"><Github className="size-3 shrink-0" />{basics.github}</span>}
+            {basics.telegram && <span className="flex items-center gap-1 break-all"><Send className="size-3 shrink-0" />{basics.telegram}</span>}
           </div>
         </div>
-      )}
+      ) : null;
+    },
 
-      {sectionVisibility.summary && summary && (
+    summary: () =>
+      sectionVisibility.summary && summary ? (
         <div className="border-t pt-4">
           <h2 className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>О себе</h2>
           <p className="leading-relaxed text-zinc-600 break-words overflow-hidden">{summary}</p>
         </div>
-      )}
+      ) : null,
 
-      {sectionVisibility.experience && experience.length > 0 && (
+    experience: () =>
+      sectionVisibility.experience && experience.length > 0 ? (
         <div className="border-t pt-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>Опыт работы</h2>
           <div className="space-y-4">
@@ -64,9 +65,10 @@ export function ModernTemplate({ data, designSettings, sectionVisibility }: Prop
             ))}
           </div>
         </div>
-      )}
+      ) : null,
 
-      {sectionVisibility.education && education.length > 0 && (
+    education: () =>
+      sectionVisibility.education && education.length > 0 ? (
         <div className="border-t pt-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>Образование</h2>
           <div className="space-y-3">
@@ -84,9 +86,10 @@ export function ModernTemplate({ data, designSettings, sectionVisibility }: Prop
             ))}
           </div>
         </div>
-      )}
+      ) : null,
 
-      {sectionVisibility.skills && skills.length > 0 && (
+    skills: () =>
+      sectionVisibility.skills && skills.length > 0 ? (
         <div className="border-t pt-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>Навыки</h2>
           <div className="space-y-2">
@@ -98,9 +101,10 @@ export function ModernTemplate({ data, designSettings, sectionVisibility }: Prop
             ))}
           </div>
         </div>
-      )}
+      ) : null,
 
-      {sectionVisibility.projects && projects.length > 0 && (
+    projects: () =>
+      sectionVisibility.projects && projects.length > 0 ? (
         <div className="border-t pt-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>Проекты</h2>
           <div className="space-y-3">
@@ -117,9 +121,10 @@ export function ModernTemplate({ data, designSettings, sectionVisibility }: Prop
             ))}
           </div>
         </div>
-      )}
+      ) : null,
 
-      {sectionVisibility.languages && languages.length > 0 && (
+    languages: () =>
+      sectionVisibility.languages && languages.length > 0 ? (
         <div className="border-t pt-4">
           <h2 className="mb-2 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>Языки</h2>
           <div className="flex gap-4">
@@ -130,9 +135,10 @@ export function ModernTemplate({ data, designSettings, sectionVisibility }: Prop
             ))}
           </div>
         </div>
-      )}
+      ) : null,
 
-      {sectionVisibility.certifications && certifications.length > 0 && (
+    certifications: () =>
+      sectionVisibility.certifications && certifications.length > 0 ? (
         <div className="border-t pt-4">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-wider" style={{ color: accent }}>Сертификаты</h2>
           <div className="space-y-2">
@@ -147,7 +153,25 @@ export function ModernTemplate({ data, designSettings, sectionVisibility }: Prop
             ))}
           </div>
         </div>
-      )}
+      ) : null,
+  };
+
+  return (
+    <div
+      style={{
+        fontFamily: fontFamilyMap[designSettings.fontFamily],
+        fontSize: fontSizeMap[designSettings.fontSize],
+        lineHeight: lineSpacingMap[designSettings.lineSpacing],
+        padding: marginsMap[designSettings.margins],
+        display: "flex",
+        flexDirection: "column",
+        gap: sSpacing,
+      }}
+    >
+      {order.map((key) => {
+        const node = sectionRenderers[key]?.();
+        return node ? <Fragment key={key}>{node}</Fragment> : null;
+      })}
     </div>
   );
 }

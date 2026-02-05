@@ -5,10 +5,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Palette } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Palette, ListOrdered } from "lucide-react";
+import { SectionOrderPanel } from "./section-order-panel";
 import { useResumeStore } from "@/lib/store";
-import type { FontFamily, FontSize } from "@/lib/types";
+import type { FontFamily, FontSize, LineSpacing, SectionSpacing, PageMargins } from "@/lib/types";
 import { toast } from "sonner";
 
 const accentColors = [
@@ -36,13 +40,39 @@ const sizeLabels: Record<FontSize, string> = {
   large: "Крупный",
 };
 
+const lineSpacingLabels: Record<LineSpacing, string> = {
+  compact: "Плотный",
+  normal: "Обычный",
+  relaxed: "Свободный",
+};
+
+const sectionSpacingLabels: Record<SectionSpacing, string> = {
+  compact: "Плотно",
+  normal: "Обычно",
+  relaxed: "Просторно",
+};
+
+const marginsLabels: Record<PageMargins, string> = {
+  narrow: "Узкие",
+  normal: "Обычные",
+  wide: "Широкие",
+};
+
 export function DesignPanel() {
   const accentColor = useResumeStore((s) => s.designSettings.accentColor);
   const fontFamily = useResumeStore((s) => s.designSettings.fontFamily);
   const fontSize = useResumeStore((s) => s.designSettings.fontSize);
+  const lineSpacing = useResumeStore((s) => s.designSettings.lineSpacing);
+  const sectionSpacing = useResumeStore((s) => s.designSettings.sectionSpacing);
+  const margins = useResumeStore((s) => s.designSettings.margins);
   const setAccentColor = useResumeStore((s) => s.setAccentColor);
   const setFontFamily = useResumeStore((s) => s.setFontFamily);
   const setFontSize = useResumeStore((s) => s.setFontSize);
+  const setLineSpacing = useResumeStore((s) => s.setLineSpacing);
+  const setSectionSpacing = useResumeStore((s) => s.setSectionSpacing);
+  const setMargins = useResumeStore((s) => s.setMargins);
+  const showPhoto = useResumeStore((s) => s.designSettings.showPhoto);
+  const setShowPhoto = useResumeStore((s) => s.setShowPhoto);
   const [showCustomColor, setShowCustomColor] = useState(false);
 
   const isPresetColor = accentColors.some((c) => c.value === accentColor);
@@ -141,6 +171,90 @@ export function DesignPanel() {
           </SelectContent>
         </Select>
       </div>
+      <div className="hidden h-4 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">Интервал:</span>
+        <Select
+          value={lineSpacing}
+          onValueChange={(v) => {
+            setLineSpacing(v as LineSpacing);
+            toast.success(`Интервал: ${lineSpacingLabels[v as LineSpacing]}`);
+          }}
+        >
+          <SelectTrigger className="h-7 w-full min-w-[100px] text-xs md:w-[100px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="compact">Плотный</SelectItem>
+            <SelectItem value="normal">Обычный</SelectItem>
+            <SelectItem value="relaxed">Свободный</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="hidden h-4 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">Секции:</span>
+        <Select
+          value={sectionSpacing}
+          onValueChange={(v) => {
+            setSectionSpacing(v as SectionSpacing);
+            toast.success(`Секции: ${sectionSpacingLabels[v as SectionSpacing]}`);
+          }}
+        >
+          <SelectTrigger className="h-7 w-full min-w-[90px] text-xs md:w-[90px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="compact">Плотно</SelectItem>
+            <SelectItem value="normal">Обычно</SelectItem>
+            <SelectItem value="relaxed">Просторно</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="hidden h-4 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">Поля:</span>
+        <Select
+          value={margins}
+          onValueChange={(v) => {
+            setMargins(v as PageMargins);
+            toast.success(`Поля: ${marginsLabels[v as PageMargins]}`);
+          }}
+        >
+          <SelectTrigger className="h-7 w-full min-w-[90px] text-xs md:w-[90px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="narrow">Узкие</SelectItem>
+            <SelectItem value="normal">Обычные</SelectItem>
+            <SelectItem value="wide">Широкие</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="hidden h-4 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">Фото:</span>
+        <Switch
+          checked={showPhoto}
+          onCheckedChange={(v) => {
+            setShowPhoto(v);
+            toast.success(v ? "Фото: вкл" : "Фото: выкл");
+          }}
+          className="scale-75"
+        />
+      </div>
+      <div className="hidden h-4 w-px bg-zinc-200 md:block dark:bg-zinc-700" />
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="sm" className="h-7 gap-1 text-xs">
+            <ListOrdered className="size-3" />
+            Порядок
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-64 p-3" side="top" align="end">
+          <SectionOrderPanel />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }

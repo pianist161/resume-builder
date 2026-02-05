@@ -5,6 +5,10 @@ export interface ResumeBasics {
   phone: string;
   location: string;
   website: string;
+  linkedin: string;
+  github: string;
+  telegram: string;
+  photo: string;
 }
 
 export interface Experience {
@@ -58,18 +62,26 @@ export interface ResumeData {
   certifications: Certification[];
 }
 
-export type TemplateId = "modern" | "professional" | "creative" | "classic";
+export type TemplateId = "modern" | "professional" | "creative" | "classic" | "minimal" | "executive" | "tech" | "twocolumn" | "academic" | "infographic";
 
 export type FontFamily = "inter" | "georgia" | "roboto";
 
 export type FontSize = "small" | "medium" | "large";
 
-export type ExportFormat = "pdf" | "json";
+export type ExportFormat = "pdf" | "json" | "docx";
+
+export type LineSpacing = "compact" | "normal" | "relaxed";
+export type SectionSpacing = "compact" | "normal" | "relaxed";
+export type PageMargins = "narrow" | "normal" | "wide";
 
 export interface DesignSettings {
   accentColor: string;
   fontFamily: FontFamily;
   fontSize: FontSize;
+  lineSpacing: LineSpacing;
+  sectionSpacing: SectionSpacing;
+  margins: PageMargins;
+  showPhoto: boolean;
 }
 
 export interface SectionVisibility {
@@ -81,4 +93,23 @@ export interface SectionVisibility {
   projects: boolean;
   languages: boolean;
   certifications: boolean;
+}
+
+export type SectionKey = keyof SectionVisibility;
+
+export const DEFAULT_SECTION_ORDER: SectionKey[] = [
+  "basics", "summary", "experience", "education",
+  "skills", "projects", "languages", "certifications",
+];
+
+export interface SavedResume {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  resume: ResumeData;
+  selectedTemplate: TemplateId;
+  designSettings: DesignSettings;
+  sectionVisibility: SectionVisibility;
+  sectionOrder?: SectionKey[];
 }

@@ -36,7 +36,11 @@ export function EditorHeader({ onOpenShortcuts }: EditorHeaderProps) {
   const loadSampleData = useResumeStore((s) => s.loadSampleData);
   const clearAllData = useResumeStore((s) => s.clearAllData);
   const importResumeData = useResumeStore((s) => s.importResumeData);
+  const savedResumes = useResumeStore((s) => s.savedResumes);
+  const activeResumeId = useResumeStore((s) => s.activeResumeId);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const activeResumeName = savedResumes.find((r) => r.id === activeResumeId)?.name;
 
   const handleUndo = () => {
     useResumeStore.temporal.getState().undo();
@@ -73,7 +77,7 @@ export function EditorHeader({ onOpenShortcuts }: EditorHeaderProps) {
     <div className="flex items-center justify-between border-b bg-white px-4 py-3 dark:bg-zinc-950 dark:border-zinc-800">
       <div className="flex items-center gap-3">
         <Button asChild variant="ghost" size="sm">
-          <Link href="/templates">
+          <Link href="/resumes">
             <ArrowLeft className="size-4" />
             <span className="hidden sm:inline">Назад</span>
           </Link>
@@ -83,6 +87,14 @@ export function EditorHeader({ onOpenShortcuts }: EditorHeaderProps) {
           <FileText className="size-4 text-blue-600" />
           <span className="hidden text-sm font-medium sm:inline">Редактор</span>
         </div>
+        {activeResumeName && (
+          <>
+            <div className="hidden h-6 w-px bg-zinc-200 sm:block dark:bg-zinc-700" />
+            <Link href="/resumes" className="hidden max-w-[160px] truncate text-xs text-muted-foreground hover:text-foreground transition-colors sm:block">
+              {activeResumeName}
+            </Link>
+          </>
+        )}
         <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-700" />
 
         {/* Undo / Redo */}
@@ -158,6 +170,9 @@ export function EditorHeader({ onOpenShortcuts }: EditorHeaderProps) {
             <SelectItem value="professional">Professional</SelectItem>
             <SelectItem value="creative">Creative</SelectItem>
             <SelectItem value="classic">Classic</SelectItem>
+            <SelectItem value="minimal">Minimal</SelectItem>
+            <SelectItem value="executive">Executive</SelectItem>
+            <SelectItem value="tech">Tech</SelectItem>
           </SelectContent>
         </Select>
 
