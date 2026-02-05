@@ -4,21 +4,11 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useResumeStore } from "@/lib/store";
-import { User } from "lucide-react";
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const urlRegex = /^https?:\/\/.+/;
 
-interface BasicsSectionProps {
-  isWizardMode?: boolean;
-}
-
-export function BasicsSection({ isWizardMode = false }: BasicsSectionProps) {
+export function BasicsFormContent() {
   const basics = useResumeStore((s) => s.resume.basics);
   const updateBasics = useResumeStore((s) => s.updateBasics);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -37,32 +27,32 @@ export function BasicsSection({ isWizardMode = false }: BasicsSectionProps) {
     }
   };
 
-  const content = (
+  return (
     <fieldset>
       <legend className="sr-only">Основная информация</legend>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="basics-name" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Имя <span className="text-red-500">*</span>
+            Полное имя <span className="text-red-500">*</span>
           </Label>
           <Input
             id="basics-name"
             value={basics.name}
             onChange={(e) => updateBasics("name", e.target.value)}
             placeholder="Иван Иванов"
-            className="h-11"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="basics-title" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-            Должность <span className="text-red-500">*</span>
+            Желаемая должность <span className="text-red-500">*</span>
           </Label>
           <Input
             id="basics-title"
             value={basics.title}
             onChange={(e) => updateBasics("title", e.target.value)}
             placeholder="Frontend разработчик"
-            className="h-11"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
@@ -77,33 +67,39 @@ export function BasicsSection({ isWizardMode = false }: BasicsSectionProps) {
             onBlur={(e) => validateField("email", e.target.value)}
             aria-invalid={!!errors.email}
             placeholder="ivan@example.com"
-            className={`h-11 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            className={`h-12 text-base ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
           />
-          {errors.email && <p className="mt-1 text-xs text-red-500" role="alert">{errors.email}</p>}
+          {errors.email && <p className="text-xs text-red-500" role="alert">{errors.email}</p>}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="basics-phone" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Телефон</Label>
+          <Label htmlFor="basics-phone" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Телефон
+          </Label>
           <Input
             id="basics-phone"
             type="tel"
             placeholder="+7 (999) 123-45-67"
             value={basics.phone}
             onChange={(e) => updateBasics("phone", e.target.value)}
-            className="h-11"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="basics-location" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Локация</Label>
+          <Label htmlFor="basics-location" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Город / Локация
+          </Label>
           <Input
             id="basics-location"
             value={basics.location}
             onChange={(e) => updateBasics("location", e.target.value)}
             placeholder="Москва, Россия"
-            className="h-11"
+            className="h-12 text-base"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="basics-website" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Сайт / LinkedIn</Label>
+          <Label htmlFor="basics-website" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+            Сайт / LinkedIn / GitHub
+          </Label>
           <Input
             id="basics-website"
             type="url"
@@ -112,29 +108,11 @@ export function BasicsSection({ isWizardMode = false }: BasicsSectionProps) {
             onChange={(e) => updateBasics("website", e.target.value)}
             onBlur={(e) => validateField("website", e.target.value)}
             aria-invalid={!!errors.website}
-            className={`h-11 ${errors.website ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+            className={`h-12 text-base ${errors.website ? "border-red-500 focus-visible:ring-red-500" : ""}`}
           />
-          {errors.website && <p className="mt-1 text-xs text-red-500" role="alert">{errors.website}</p>}
+          {errors.website && <p className="text-xs text-red-500" role="alert">{errors.website}</p>}
         </div>
       </div>
     </fieldset>
-  );
-
-  if (isWizardMode) {
-    return content;
-  }
-
-  return (
-    <AccordionItem value="basics">
-      <AccordionTrigger className="px-4 hover:no-underline">
-        <div className="flex items-center gap-3">
-          <User className="size-4 text-indigo-600" />
-          <span className="font-medium">Основное</span>
-        </div>
-      </AccordionTrigger>
-      <AccordionContent className="px-4 pb-4">
-        {content}
-      </AccordionContent>
-    </AccordionItem>
   );
 }
